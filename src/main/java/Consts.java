@@ -9,4 +9,7 @@ public class Consts {
 
     final static String MATERIALS_ID = "insumo_id";
 
+    final static String USER = "usuario";
+    final static String DESTINY = "destino";
+
 }

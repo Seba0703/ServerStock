@@ -23,22 +23,14 @@ public class HelloWorld {
         //levantar base de datos de muebles
         //levantar base de datos de usuarios
 
-        get("/hello", (req, res) -> {
-
-            System.out.println("Body:" + req.body());
-            System.out.println("HEADERS:" + req.headers());
-            System.out.println("PIPO HEADER: " + req.headers("pipo"));
-            System.out.println("CONTENT TYPE:" + req.contentType());
-            System.out.println( "PROTOCOL:" + req.protocol());
-            return "ok";
-        });
-
         put(MAT_SUB, (request, response) -> {
 
             JSONObject jsonMat = new JSONObject(request.body());
 
             String materialID = jsonMat.getString(NAME_MAT_KEY);
-            int quantity = jsonMat.getInt(QUANTITY_MAT_KEY);
+            String user = jsonMat.getString(Consts.USER);
+            String destiny = jsonMat.getString(Consts.DESTINY);
+            int quantity = jsonMat.getInt(Consts.QUANTITY);
 
             DB.updateLessMaterialDBkey(materialID,quantity,response);
 
@@ -60,15 +52,5 @@ public class HelloWorld {
 
             return response;
         });
-
-        post("/hello", (req, res) -> {
-            System.out.println("Body:" + req.body());
-            System.out.println("HEADERS:" + req.headers());
-            System.out.println("PIPO HEADER: " + req.headers("pipo"));
-            System.out.println("CONTENT TYPE:" + req.contentType());
-            System.out.println( "PROTOCOL:" + req.protocol());
-            return "ok";
-        });
-        get("/stock", (req, res) -> "45");
     }
 }

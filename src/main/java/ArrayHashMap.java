@@ -6,9 +6,7 @@ import java.util.*;
 
 public class ArrayHashMap {
 
-    private Map<String, List<MaterialInfo>> dataMapper = null;
-
-
+    private Map<String, MaterialInfoList> dataMapper = null;
 
     public ArrayHashMap() {
         dataMapper = new HashMap<>();
@@ -16,40 +14,49 @@ public class ArrayHashMap {
 
     public void put(String key, MaterialInfo value) {
 
-        List<MaterialInfo> dataList;
+        MaterialInfoList materialInfoList;
 
         if (dataMapper.containsKey(key)) {
-            dataList = dataMapper.get(key);
+            materialInfoList = dataMapper.get(key);
         } else {
-            dataList = new ArrayList<>();
+            materialInfoList = new MaterialInfoList();
         }
 
-        dataList.add(value);
+        materialInfoList.add(value);
 
         if (!dataMapper.containsKey(key)) {
-            dataMapper.put(key,dataList);
+            dataMapper.put(key,materialInfoList);
         }
 
     }
 
     public List<MaterialInfo> get(String key) {
-        return dataMapper.get(key);
+        return dataMapper.get(key).getList();
     }
 
     public void sortAllLists() {
-        for (Map.Entry<String,  List<MaterialInfo>> entry : dataMapper.entrySet()) {
-            Collections.sort(entry.getValue());
+        for (Map.Entry<String,  MaterialInfoList> entry : dataMapper.entrySet()) {
+            Collections.sort(entry.getValue().getList());
         }
     }
 
     public void saveIntoDB(MongoDatabase db) {
 
-        for (Map.Entry<String,  List<MaterialInfo>> entry : dataMapper.entrySet()) {
+        Calendar date = Calendar.getInstance();
+        String yearMonth = date.get(Calendar.YEAR) + Common.getRealMonth(date.get(Calendar.MONTH));
 
-            List<Document> docList = toDocumentList(entry.getValue());
+        for (Map.Entry<String,  MaterialInfoList> entry : dataMapper.entrySet()) {
+
+            List<Document> docList = toDocumentList(entry.getValue().getList());
 
             db.getCollection(RocksDBWrapper.MaterialsCollection).insertOne(new Document(Consts.INFO, docList)
-                    .append(Consts.MATERIALS_ID,entry.getKey()));
+                    .append(Consts.MATERIALS_ID, entry.getKey())
+                    .append(Consts.QUANTITY, entry.getValue().getQuantity()));
+
+            //inicializa las salidas de los productos por AñoMes
+            db.getCollection(RocksDBWrapper.MaterialOutQuantityTrim).insertOne(new Document(Consts.MATERIALS_ID, entry.getKey())
+                    .append(Consts.YEAR_MONTH_ID, yearMonth)
+                    .append(Consts.QUANTITY, 0));
 
         }
     }

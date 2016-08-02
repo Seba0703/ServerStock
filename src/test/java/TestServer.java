@@ -9,7 +9,7 @@ public class TestServer {
 
     @Test
     public void ArrayHashMapTest() {
-        ArrayHashMap dataMapper = TokenizerCSV.tokenize();
+        ArrayHashMap dataMapper = TokenizerCSV.tokenizeMaterialFile();
 
         List<MaterialInfo> list = new ArrayList<>(dataMapper.get("jeringa"));
 

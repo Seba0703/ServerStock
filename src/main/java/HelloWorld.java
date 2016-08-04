@@ -17,8 +17,10 @@ public class HelloWorld {
     private final static String MAT_STATUS = "mat_status";
     private final static String MAT_TRANSACTIONS_DEST = "mat_transacDest";
     private final static String MAT_TRANSACTIONS_PROD = "mat_transacProd";
-    private final static String MAT_VARS_CONFIG = "mat_varsConfig";
+    private final static String VARS_CONFIG = "varsConfig";
     private final static String MAT_MATERIALS_ID = "mat_matID";
+    private final static String LOGIN = "login";
+    private final static String LOGON = "logon";
 
     //--json keys--
     public final static String NAME_MAT_KEY = "nombre";
@@ -194,7 +196,7 @@ public class HelloWorld {
 
         });
 
-        put(MAT_VARS_CONFIG, (request, response) -> {
+        put(VARS_CONFIG, (request, response) -> {
 
             JSONObject jsonReq = new JSONObject(request.body());
             String materialID = jsonReq.getString(Consts.MATERIALS_ID);
@@ -207,7 +209,7 @@ public class HelloWorld {
             return "Ok";
         });
 
-        get(MAT_VARS_CONFIG, (request, response) -> {
+        get(VARS_CONFIG, (request, response) -> {
 
             JSONObject jsonReq = new JSONObject(request.body());
 
@@ -242,8 +244,30 @@ public class HelloWorld {
             });
 
             JSONObject result = new JSONObject();
-            result.put(Consts.RESULT,jsonArray);
+            result.put(Consts.RESULT, jsonArray);
             return result.toString();
+        });
+
+        post(LOGON, (request, response) -> {
+
+            String user = request.headers(Consts.USER);
+            String pass = request.headers(Consts.PASS);
+
+            DB.logon(user, pass, response);
+
+            return response.body();
+
+        });
+
+        get(LOGIN, (request, response) -> {
+
+            String user = request.headers(Consts.USER);
+            String pass = request.headers(Consts.PASS);
+
+            DB.login(user, pass, response);
+
+            return response.body();
+
         });
 
 

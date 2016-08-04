@@ -37,7 +37,8 @@ public class Consts {
     final static String STOCK_SAFE = "SafeStock";
     final static String STOCK_MULTIPLY = "MultiplyStock";
 
-    final static String USER = "usuario";
+    final static String USER = "user_id";
+    final static String PASS = "pass";
     final static String DESTINY = "destino";
 
 }

@@ -24,6 +24,8 @@ class RocksDBWrapper {
     final static String TransactionRecords = "transacciones";
     final static String LastUpdate = "lastUpdate";
 
+    final static String USERS = "usuarios";
+
     final static String FurnituresDBname = "muebles";
 
     private boolean existDB = false;
@@ -416,5 +418,35 @@ class RocksDBWrapper {
                 .append(Consts.QUANTITY, material.materialInfo.quantity)
                 .append(Consts.PRICE, material.materialInfo.price)
                 .append(Consts.DUE_DATE, material.materialInfo.dueDate));
+    }
+
+    public void logon(String user, String pass, Response response) {
+
+        Document userDoc = copaDB.getCollection(USERS).find(new Document(Consts.USER, user)).first();
+
+        if ( !userDoc.isEmpty() ) {
+            response.status(404);
+            response.body("Usuario existente.");
+        } else {
+            copaDB.getCollection(USERS).insertOne(new Document(Consts.USER,user)
+                    .append(Consts.PASS, pass));
+            response.body("Ok.");
+        }
+    }
+
+    public void login(String user, String pass, Response response) {
+
+        Document userDoc = copaDB.getCollection(USERS).find(new Document(Consts.USER, user)
+                .append(Consts.PASS, pass))
+                .first();
+
+        if ( !userDoc.isEmpty() ) {
+            response.body("Ok.");
+        } else {
+            response.status(404);
+            response.body("Usuario no existe o contraseña erronea.");
+        }
+
+
     }
 }

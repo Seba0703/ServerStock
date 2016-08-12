@@ -408,13 +408,10 @@ class RocksDBWrapper {
                 .append(Consts.YEAR_MONTH_ID, lastUpdate), new Document("$set", document));
     }
 
-    public void getStockVars(String materialID, StockVars stockVars) {
+    public Document getStockVars(String materialID, StockVars stockVars) {
 
-        Document stockVarDoc = copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)).first();
+        return copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)).first();
 
-        stockVars.stockMin = stockVarDoc.getInteger(Consts.STOCK_MIN);
-        stockVars.multiplierSafetyVar = stockVarDoc.getInteger(Consts.STOCK_MULTIPLY);
-        stockVars.safetyVar = stockVarDoc.getInteger(Consts.STOCK_SAFE);
     }
 
     public FindIterable<Document> getMaterialsID() {
@@ -653,5 +650,21 @@ class RocksDBWrapper {
 
     public FindIterable<Document> getChangeRecords(Document document) {
         return copaDB.getCollection(Changes).find(document);
+    }
+
+    public boolean hasMaterial(String nameKey) {
+        Document find = copaDB.getCollection(MaterialsCollection).find(new Document(Consts.MATERIALS_ID, nameKey)).first();
+        return find != null;
+    }
+
+    public void hasPermission(Document toFind, Response response) {
+        Document found = copaDB.getCollection(USERS).find(toFind).first();
+        if (found != null) {
+            response.status(200);
+            response.body("Aceptado");
+        } else {
+            response.status(411);
+            response.body("rechazado");
+        }
     }
 }

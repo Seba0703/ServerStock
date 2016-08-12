@@ -3,6 +3,11 @@ import com.mongodb.client.FindIterable;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import spark.Filter;
+import spark.Request;
+import spark.Response;
+
+import javax.print.Doc;
 
 import static spark.Spark.*;
 
@@ -22,10 +27,12 @@ public class HelloWorld {
     private final static String SET_USERS = "setUsers";
     private final static String USERS_ID = "userID";
     private static final String DELETE_PROD = "deleteProd";
+    private static final String HAS_PERMISSION = "tienePermiso";
+    private static RocksDBWrapper DB;
 
     public static void main(String[] args) {
 
-        RocksDBWrapper DB = new RocksDBWrapper();
+        DB = new RocksDBWrapper();
 
         DB.saveMaterialStockMax();
         DB.initializeMaterialQuantityTrim();
@@ -35,9 +42,6 @@ public class HelloWorld {
         //levantar base de datos de usuarios
 
         put(MAT_SUB, (request, response) -> {
-
-
-
             JSONObject jsonMat = new JSONObject(request.body());
 
             String materialID = jsonMat.getString(Consts.MATERIALS_ID);
@@ -62,7 +66,6 @@ public class HelloWorld {
             material.add("" + jsonMat.getInt(Consts.DUE_DATE));
             material.add("" + jsonMat.getDouble(Consts.PRICE));
             material.add("" + jsonMat.getInt(Consts.TRANSACTION_DATE));
-
             String user = jsonMat.getString(Consts.USER);
 
             DB.updateAddMaterialDBkey(material, response);
@@ -76,18 +79,21 @@ public class HelloWorld {
             System.out.println("post prod");
 
             JSONObject jsonMat = new JSONObject(request.body());
-
             Material material = new Material();
-
             material.add(jsonMat.getString(Consts.MATERIALS_ID));
             material.add("" + jsonMat.getInt(Consts.QUANTITY));
             material.add("" + jsonMat.getInt(Consts.DUE_DATE));
             material.add("" + jsonMat.getDouble(Consts.PRICE));
             material.add("" + jsonMat.getInt(Consts.TRANSACTION_DATE));
-
             String user = jsonMat.getString(Consts.USER);
 
-            DB.addNewMaterial(material);
+            if (DB.hasMaterial(material.nameKey)) {
+                System.out.println("tiene");
+                DB.updateAddMaterialDBkey(material, response);
+            } else {
+                System.out.println("nuevo");
+                DB.addNewMaterial(material);
+            }
             DB.updateTransaction(user, material);
 
             return "Ok";
@@ -201,21 +207,11 @@ public class HelloWorld {
 
         get(VARS_CONFIG, (request, response) -> {
 
-            JSONObject jsonReq = new JSONObject(request.body());
-
-            String materialID = jsonReq.getString(Consts.MATERIALS_ID);
-
             StockVars stockVars = new StockVars();
 
-            DB.getStockVars(materialID, stockVars);
+            Document doc = DB.getStockVars(request.headers(Consts.MATERIALS_ID), stockVars);
 
-            JSONObject jsonO = new JSONObject();
-
-            jsonO.put(Consts.STOCK_MIN, stockVars.stockMin);
-            jsonO.put(Consts.STOCK_MULTIPLY, stockVars.multiplierSafetyVar);
-            jsonO.put(Consts.STOCK_SAFE, stockVars.safetyVar);
-
-            return jsonO.toString();
+            return doc.toJson();
         });
 
         get(MAT_MATERIALS_ID, (request, response) -> {
@@ -276,6 +272,12 @@ public class HelloWorld {
             result.put(Consts.RESULT, jsonArray);
             return result.toString();
         });
+
+        put(HAS_PERMISSION, ((request, response) -> {
+            System.out.println(request.body());
+            DB.hasPermission(Document.parse(request.body()), response);
+            return response.body();
+        }));
 
         put(EDIT_PROD, (request, response) -> {
 
@@ -406,7 +408,5 @@ public class HelloWorld {
 
             return jsonResult.toString();
         });
-
-
     }
 }

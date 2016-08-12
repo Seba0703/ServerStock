@@ -5,9 +5,11 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
+import org.json.JSONObject;
 import spark.Response;
 
 import javax.print.Doc;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -22,16 +24,25 @@ class RocksDBWrapper {
     final static String MaterialStock_Vars = "stockMaxMat";
     final static String MaterialOutQuantityTrim = "salidasMatTrim";
     final static String TransactionRecords = "transacciones";
+    final static String Changes = "cambios";
     final static String LastUpdate = "lastUpdate";
 
+    //base de datos de usuarios
     final static String USERS = "usuarios";
+    //---------------------------------------------
 
     final static String FurnituresDBname = "muebles";
 
     private boolean existDB = false;
     private  MongoDatabase copaDB;
 
+    private int transDate;
+
     RocksDBWrapper() {
+
+        Calendar calendar = Calendar.getInstance();
+        String date = calendar.get(Calendar.YEAR) + Common.getRealMonth(calendar.get(Calendar.MONTH)) + Common.getRealDay(calendar.get(Calendar.DAY_OF_MONTH));
+        transDate = Integer.parseInt(date);
         MongoClient mongoClient = new MongoClient();
 
         MongoIterable<String> dbList = mongoClient.listDatabaseNames();
@@ -72,10 +83,11 @@ class RocksDBWrapper {
 
             int quantityLote = firstDueDate.getInteger(Consts.QUANTITY);
             newQuantityStock = quantityLote - quantitySub;
-            int price = firstDueDate.getInteger(Consts.PRICE);
+            double price = firstDueDate.getDouble(Consts.PRICE);
+            int dueDate = firstDueDate.getInteger(Consts.DUE_DATE);
 
             if ( newQuantityStock <= 0) {               // si es mas chico que cero ese lote quedo vacio y se va al siguiente
-                updateTransaction(user,destiny,materialID,quantityLote,price);
+                updateTransaction(user, destiny, materialID, quantityLote, dueDate, price);
                 docArray.remove(i);
                 if (newQuantityStock == 0) {
                     done = true;
@@ -84,7 +96,7 @@ class RocksDBWrapper {
                     i--;
                 }
             } else {
-                updateTransaction(user,destiny,materialID,quantitySub,price);
+                updateTransaction(user,destiny,materialID,quantitySub, dueDate, price);
                 firstDueDate.put(Consts.QUANTITY, newQuantityStock);
                 done = true;
             }
@@ -109,6 +121,7 @@ class RocksDBWrapper {
             response.body("Ok");
         }
 
+        //TODO: sacar
         FindIterable<Document> iterableShow = copaDB.getCollection(MaterialsCollection).find(eq(Consts.MATERIALS_ID, materialID));
         iterableShow.forEach(new Block<Document>() {
             @Override
@@ -141,7 +154,7 @@ class RocksDBWrapper {
                 addToDocList(docArray, index, materialInfo );
                 found = true;
             } else if (index == docArray.size() - 1 ) {
-                addToDocList(docArray, index, materialInfo );
+                addToDocList(docArray, materialInfo );
                 found = true;
             }
 
@@ -149,9 +162,7 @@ class RocksDBWrapper {
         }
 
         if (docArray.isEmpty()) {
-            docArray.add(new Document().append(Consts.DUE_DATE, materialInfo.dueDate)
-                    .append(Consts.PRICE, materialInfo.price)
-                    .append(Consts.QUANTITY, materialInfo.quantity));
+            addToDocList(docArray, materialInfo );
         }
 
         UpdateResult result = copaDB.getCollection(MaterialsCollection).updateOne(new Document(Consts.MATERIALS_ID, material.nameKey),
@@ -166,6 +177,7 @@ class RocksDBWrapper {
             response.body("Ok");
         }
 
+        //TODO: sacar
         FindIterable<Document> iterableShow = copaDB.getCollection(MaterialsCollection).find(eq(Consts.MATERIALS_ID, material.nameKey));
         iterableShow.forEach(new Block<Document>() {
             @Override
@@ -176,9 +188,17 @@ class RocksDBWrapper {
     }
 
     private void addToDocList(List<Document> docArray, int index, MaterialInfo materialInfo) {
-        docArray.add(index + 1, new Document().append(Consts.DUE_DATE, materialInfo.dueDate)
+        docArray.add(index, new Document().append(Consts.DUE_DATE, materialInfo.dueDate)
                 .append(Consts.PRICE, materialInfo.price)
-                .append(Consts.QUANTITY, materialInfo.quantity));
+                .append(Consts.QUANTITY, materialInfo.quantity)
+                .append(Consts.TRANSACTION_DATE, materialInfo.buyDate));
+    }
+
+    private void addToDocList(List<Document> docArray, MaterialInfo materialInfo) {
+        docArray.add( new Document().append(Consts.DUE_DATE, materialInfo.dueDate)
+                .append(Consts.PRICE, materialInfo.price)
+                .append(Consts.QUANTITY, materialInfo.quantity)
+                .append(Consts.TRANSACTION_DATE, materialInfo.buyDate));
     }
 
     private boolean lastSameDate(List<Document> docArray, int i, MaterialInfo info) {
@@ -314,44 +334,32 @@ class RocksDBWrapper {
         return matInfo.getInteger(Consts.QUANTITY);
     }
 
-    private void recordTransaction(String matName, int transDate, String destiny, String transType, int price, int quantity ) {
+    private void recordTransaction(String user, String matName, int transDate, String destiny, String transType, double price, int quantity, int dueDate ) {
         copaDB.getCollection(TransactionRecords).insertOne(new Document(Consts.TRANSACTION_DATE, transDate)
-                .append(Consts.MATERIALS_ID,matName)
+                .append(Consts.MATERIALS_ID, matName)
                 .append(Consts.DESTINY, destiny)
                 .append(Consts.TRANSACTION_TYPE, transType)
                 .append(Consts.PRICE, price)
-                .append(Consts.QUANTITY, quantity));
+                .append(Consts.QUANTITY, quantity)
+                .append(Consts.USER, user)
+                .append(Consts.DUE_DATE, dueDate));
 
     }
 
     //entradas
-    public void updateTransaction(Material material, int transactionDate) {
-        recordTransaction(material.nameKey,transactionDate,Consts.DESTINY_IN,Consts.TRANSACTION_TYPE_IN,material.materialInfo.price,material.materialInfo.quantity);
+    public void updateTransaction(String user, Material material) {
+        recordTransaction(user, material.nameKey, material.materialInfo.buyDate, Consts.DESTINY_IN, Consts.TRANSACTION_TYPE_IN,
+                material.materialInfo.price, material.materialInfo.quantity, material.materialInfo.dueDate);
     }
 
     //salidas
-    private void updateTransaction(String user, String destiny, String materialID, int quantity, int price) {
-        Calendar calendar = Calendar.getInstance();
-        String date = calendar.get(Calendar.YEAR) + Common.getRealMonth(calendar.get(Calendar.MONTH)) + Common.getRealDay(calendar.get(Calendar.DAY_OF_MONTH));
-        recordTransaction(materialID,Integer.parseInt(date),destiny,Consts.TRANSACTION_TYPE_OUT,price,quantity);
+    private void updateTransaction(String user, String destiny, String materialID, int quantity, int dueDate, double price) {
+        recordTransaction(user, materialID, transDate, destiny, Consts.TRANSACTION_TYPE_OUT, price, quantity, dueDate);
     }
 
-    public FindIterable<Document> getRecords(String materialID, String transType, String destiny, int fromDate, int toDate) {
+    public FindIterable<Document> getRecords(Document document) {
 
-        return copaDB.getCollection(TransactionRecords).find(new Document(Consts.MATERIALS_ID,materialID)
-                .append(Consts.TRANSACTION_TYPE, transType)
-                .append(Consts.DESTINY, destiny)
-                .append(Consts.TRANSACTION_DATE, new Document("$lte", toDate))
-                .append(Consts.TRANSACTION_DATE, new Document("$gte", fromDate)))
-                .sort(new Document(Consts.TRANSACTION_DATE, -1));
-
-    }
-
-    public FindIterable<Document> getRecords(String transType, String destiny, int fromDate, int toDate) {
-        return copaDB.getCollection(TransactionRecords).find(new Document(Consts.TRANSACTION_TYPE, transType)
-                .append(Consts.DESTINY, destiny)
-                .append(Consts.TRANSACTION_DATE, new Document("$lte", toDate))
-                .append(Consts.TRANSACTION_DATE, new Document("$gte", fromDate)))
+        return copaDB.getCollection(TransactionRecords).find(document)
                 .sort(new Document(Consts.TRANSACTION_DATE, -1) );
     }
 
@@ -414,24 +422,80 @@ class RocksDBWrapper {
     }
 
     public void addNewMaterial(Material material) {
-        copaDB.getCollection(MaterialsCollection).insertOne(new Document(Consts.MATERIALS_ID, material.nameKey)
-                .append(Consts.QUANTITY, material.materialInfo.quantity)
+        List<Document> listDoc = new ArrayList<>();
+        Document docInfo = new Document().append(Consts.QUANTITY, material.materialInfo.quantity)
                 .append(Consts.PRICE, material.materialInfo.price)
-                .append(Consts.DUE_DATE, material.materialInfo.dueDate));
+                .append(Consts.DUE_DATE, material.materialInfo.dueDate)
+                .append(Consts.TRANSACTION_DATE, material.materialInfo.buyDate);
+
+        listDoc.add(docInfo);
+
+        copaDB.getCollection(MaterialsCollection).insertOne(new Document(Consts.MATERIALS_ID, material.nameKey)
+                .append(Consts.INFO, listDoc)
+                .append(Consts.QUANTITY, material.materialInfo.quantity));
     }
 
-    public void logon(String user, String pass, Response response) {
+    public void setUser(Document userDoc, Response response) {
+        System.out.println("parseo bien");
 
-        Document userDoc = copaDB.getCollection(USERS).find(new Document(Consts.USER, user)).first();
+        System.out.println("---------------------------------------------------------------------------------------------");
+        FindIterable<Document> iterableShow2 = copaDB.getCollection(USERS).find();
+        iterableShow2.forEach(new Block<Document>() {
+            @Override
+            public void apply(final Document document) {
+                System.out.println(document);
+            }
+        });
+        System.out.println("---------------------------------------------------------------------------------------------");
 
-        if ( !userDoc.isEmpty() ) {
-            response.status(404);
-            response.body("Usuario existente.");
+        String userName = userDoc.getString(Consts.USER);
+
+        Document toFind = new Document(Consts.USER, userName);
+        Document userFind = copaDB.getCollection(USERS).find(toFind).first();
+        System.out.println("User: " + userFind);
+        boolean checkPass =false;
+
+        checkPass = (Boolean) userDoc.remove(Consts.CHECK_PASS);
+
+        System.out.println("check pass " + checkPass);
+
+        if( userFind != null && checkPass) {
+            if (userDoc.getString(Consts.PASS).equals(userFind.getString(Consts.PASS))) {
+                System.out.println("pass update");
+                String pasNew = (String)userDoc.remove(Consts.PASS_NEW);
+                System.out.println("passNew: " + pasNew );
+                userDoc.replace(Consts.PASS, pasNew);
+                copaDB.getCollection(USERS).replaceOne( toFind, userDoc);
+                response.status(200);
+                response.body("Ok");
+                System.out.println("1");
+            } else {
+                System.out.println("error");
+                response.body("Error password");
+                response.status(404);
+            }
+        } else if (userFind != null ) {
+            System.out.println("2");
+            userDoc.append(Consts.PASS, userFind.getString(Consts.PASS));
+            copaDB.getCollection(USERS).replaceOne( toFind, userDoc);
+            response.status(200);
+            response.body("Ok");
         } else {
-            copaDB.getCollection(USERS).insertOne(new Document(Consts.USER,user)
-                    .append(Consts.PASS, pass));
-            response.body("Ok.");
+            System.out.println("3");
+            copaDB.getCollection(USERS).insertOne(userDoc);
+            response.status(200);
+            response.body("Ok");
         }
+        System.out.println("//////////////////////////////////////////////////////////////////////////////////////////////////////");
+        FindIterable<Document> iterableShow = copaDB.getCollection(USERS).find();
+        iterableShow.forEach(new Block<Document>() {
+            @Override
+            public void apply(final Document document) {
+                System.out.println(document);
+            }
+        });
+        System.out.println("//////////////////////////////////////////////////////////////////////////////////////////////////////");
+
     }
 
     public void login(String user, String pass, Response response) {
@@ -440,7 +504,7 @@ class RocksDBWrapper {
                 .append(Consts.PASS, pass))
                 .first();
 
-        if ( !userDoc.isEmpty() ) {
+        if ( userDoc != null ) {
             response.body("Ok.");
         } else {
             response.status(404);
@@ -448,5 +512,146 @@ class RocksDBWrapper {
         }
 
 
+    }
+
+    public void addProductoStockVars(String materialID, int stockMax, int stockMin, int safe, int multiplier) {
+        FindIterable<Document> iterable = copaDB.getCollection(LastUpdate).find();
+        Document first = iterable.first();
+        int lastUpdate = first.getInteger(Consts.LAST_UPDATE);
+
+        copaDB.getCollection(MaterialStock_Vars).insertOne(new Document(Consts.STOCK_MAX, stockMax)
+                .append(Consts.MATERIALS_ID, materialID)
+                .append(Consts.YEAR_MONTH_ID, lastUpdate)
+                .append(Consts.STOCK_MIN, stockMin)
+                .append(Consts.STOCK_SAFE, safe)
+                .append(Consts.STOCK_MULTIPLY, multiplier));
+    }
+
+    public FindIterable<Document> getUserID() {
+
+        return copaDB.getCollection(USERS).find();
+    }
+
+    public void getMaterialData(String name, double price, int dueDate, int buyDate, Response response) {
+
+        Document matInfo = copaDB.getCollection(MaterialsCollection).find(new Document(Consts.MATERIALS_ID, name)).first();
+        List<Document> docArray =  (List<Document>) matInfo.get(Consts.INFO);
+
+        int i = 0;
+        boolean end = false;
+        Document docInfo = null;
+        int maxCant = 0;
+
+        while ( i < docArray.size() && !end ) {
+            Document info = docArray.get(i);
+            int dueDateProd = info.getInteger(Consts.DUE_DATE);
+            double priceProd = info.getDouble(Consts.PRICE);
+            int cant = info.getInteger(Consts.QUANTITY);
+            int buyDateProd = info.getInteger(Consts.TRANSACTION_DATE);
+            if (dueDateProd == dueDate && priceProd == price && buyDateProd == buyDate && cant > maxCant) {
+                maxCant = cant;
+                docInfo = info;
+            } else if (dueDate < dueDateProd) {
+                end = true;
+            }
+
+            i++;
+        }
+
+        if (docInfo != null) {
+            JSONObject jsonO = new JSONObject();
+            jsonO.put(Consts.MATERIALS_ID, name);
+            jsonO.put(Consts.QUANTITY, docInfo.getInteger(Consts.QUANTITY));
+            jsonO.put(Consts.PRICE, price);
+            jsonO.put(Consts.DUE_DATE, dueDate);
+            jsonO.put(Consts.TRANSACTION_DATE, buyDate);
+
+            response.body(jsonO.toString());
+        } else {
+            response.status(404);
+            response.body("Bad request");
+        }
+
+    }
+
+    public void deleteMaterialData(Material oldMat, Response response) {
+
+        Document matInfo = copaDB.getCollection(MaterialsCollection).find(new Document(Consts.MATERIALS_ID, oldMat.nameKey)).first();
+        List<Document> docArray =  (List<Document>) matInfo.get(Consts.INFO);
+
+        int i = 0;
+        boolean end = false;
+        Document docInfo = null;
+
+        MaterialInfo oldMatInfo = oldMat.materialInfo;
+
+        while ( i < docArray.size() && !end ) {
+            Document info = docArray.get(i);
+            int dueDateProd = info.getInteger(Consts.DUE_DATE);
+            double priceProd = info.getDouble(Consts.PRICE);
+            int cant = info.getInteger(Consts.QUANTITY);
+            int buyDateProd = info.getInteger(Consts.TRANSACTION_DATE);
+            if (dueDateProd == oldMatInfo.dueDate && priceProd == oldMatInfo.price && buyDateProd == oldMatInfo.buyDate && cant == oldMatInfo.quantity) {
+                docInfo = info;
+                System.out.println("while " + docInfo);
+                end = true;
+            } else if (oldMatInfo.dueDate < dueDateProd) {
+                end = true;
+            }
+
+            i++;
+        }
+
+        System.out.println("remove " + docInfo);
+        docArray.remove(docInfo);
+
+        System.out.println("LIST " + docArray);
+
+        int totalQuantity = matInfo.getInteger(Consts.QUANTITY) - docInfo.getInteger(Consts.QUANTITY);
+
+        System.out.println("cantidad prev " + matInfo.getInteger(Consts.QUANTITY));
+        System.out.println("cantidad saco " +docInfo.getInteger(Consts.QUANTITY));
+
+
+        UpdateResult result = copaDB.getCollection(MaterialsCollection).updateOne(new Document(Consts.MATERIALS_ID, oldMat.nameKey),
+                new Document("$set", new Document(Consts.INFO, docArray)
+                        .append(Consts.QUANTITY, totalQuantity)));
+
+        if ( result.getMatchedCount() == 0  || !result.isModifiedCountAvailable()) {
+            response.status(404);
+            response.body("Bad request");
+            System.out.println("BAD");
+        } else {
+            response.status(200);
+            response.body("Ok");
+            System.out.println("OK");
+        }
+    }
+
+    public void updateChanges(Material oldMat, Material newMat, String oldUser, String newUser) {
+
+        MaterialInfo oldInfo = oldMat.materialInfo;
+        MaterialInfo newInfo = newMat.materialInfo;
+
+        copaDB.getCollection(Changes).insertOne(new Document(Consts.MATERIALS_ID, oldMat.nameKey)
+                .append(Consts.QUANTITY,oldInfo.quantity)
+                .append(Consts.TRANSACTION_DATE, oldInfo.buyDate)
+                .append(Consts.DUE_DATE, oldInfo.dueDate)
+                .append(Consts.PRICE, oldInfo.price)
+                .append(Consts.USER, oldUser)
+
+                .append(Consts.DESTINY, Consts.DESTINY_IN)                          //comun entre nuevo y viejo
+                .append(Consts.TRANSACTION_TYPE, Consts.TRANSACTION_TYPE_CHANGE)    //comun entre nuevo y viejo
+
+                .append(Consts.MATERIALS_IDnew, newMat.nameKey)
+                .append(Consts.QUANTITYnew, newInfo.quantity)
+                .append(Consts.TRANS_DATEnew, newInfo.buyDate)
+                .append(Consts.DUE_DATEnew, newInfo.dueDate)
+                .append(Consts.PRICEnew, newInfo.price)
+                .append(Consts.USERnew, newUser));
+    }
+
+    public FindIterable<Document> getChangeRecords(Document document) {
+        return copaDB.getCollection(Changes).find(document);
     }
 }

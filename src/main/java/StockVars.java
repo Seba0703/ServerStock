@@ -1,6 +1,4 @@
-/**
- * Created by Sebastian on 01/08/2016.
- */
+
 public class StockVars {
 
     String nameMaterial;

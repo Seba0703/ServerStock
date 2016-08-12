@@ -3,7 +3,8 @@ public class MaterialInfo implements Comparable<MaterialInfo>{
     private int count;
     int quantity;
     int dueDate;
-    int price;
+    double price;
+    int buyDate;
 
     public MaterialInfo() {
         count = 0;
@@ -11,13 +12,11 @@ public class MaterialInfo implements Comparable<MaterialInfo>{
 
     public void add(String info) {
 
-        int value = Integer.parseInt(info);
-
         switch (count) {
-            case 0: quantity = value; break;
-            case 1: dueDate = value; break;
-            case 2: price = value; break;
-
+            case 0: quantity = Integer.parseInt(info); break;
+            case 1: dueDate = Integer.parseInt(info); break;
+            case 2: price = Double.parseDouble(info); break;
+            case 3: buyDate = Integer.parseInt(info); break;
         }
 
         count++;

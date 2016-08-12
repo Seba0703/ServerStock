@@ -68,8 +68,9 @@ public class ArrayHashMap {
         for (MaterialInfo info : list) {
 
             Document infoDoc = new Document().append(Consts.DUE_DATE, info.dueDate)
-                                            .append(Consts.PRICE, info.price)
-                                            .append(Consts.QUANTITY, info.quantity);
+                    .append(Consts.PRICE, info.price)
+                    .append(Consts.QUANTITY, info.quantity)
+                    .append(Consts.TRANSACTION_DATE, info.buyDate);
             infoList.add(infoDoc);
         }
 

@@ -408,7 +408,7 @@ class RocksDBWrapper {
                 .append(Consts.YEAR_MONTH_ID, lastUpdate), new Document("$set", document));
     }
 
-    public Document getStockVars(String materialID, StockVars stockVars) {
+    public Document getStockVars(String materialID) {
 
         return copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)).first();
 
@@ -433,17 +433,6 @@ class RocksDBWrapper {
     }
 
     public void setUser(Document userDoc, Response response) {
-        System.out.println("parseo bien");
-
-        System.out.println("---------------------------------------------------------------------------------------------");
-        FindIterable<Document> iterableShow2 = copaDB.getCollection(USERS).find();
-        iterableShow2.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document);
-            }
-        });
-        System.out.println("---------------------------------------------------------------------------------------------");
 
         String userName = userDoc.getString(Consts.USER);
 
@@ -454,15 +443,17 @@ class RocksDBWrapper {
 
         checkPass = (Boolean) userDoc.remove(Consts.CHECK_PASS);
 
-        System.out.println("check pass " + checkPass);
-
         if( userFind != null && checkPass) {
             if (userDoc.getString(Consts.PASS).equals(userFind.getString(Consts.PASS))) {
                 System.out.println("pass update");
                 String pasNew = (String)userDoc.remove(Consts.PASS_NEW);
                 System.out.println("passNew: " + pasNew );
                 userDoc.replace(Consts.PASS, pasNew);
-                copaDB.getCollection(USERS).replaceOne( toFind, userDoc);
+                if (userName.equals(Consts.ADMIN)) {
+                    copaDB.getCollection(USERS).updateOne(toFind, new Document("$set", new Document(Consts.PASS, pasNew)));
+                } else {
+                    copaDB.getCollection(USERS).replaceOne(toFind, userDoc);
+                }
                 response.status(200);
                 response.body("Ok");
                 System.out.println("1");
@@ -471,7 +462,7 @@ class RocksDBWrapper {
                 response.body("Error password");
                 response.status(404);
             }
-        } else if (userFind != null ) {
+        } else if (userFind != null && !userName.equals(Consts.ADMIN) ) {
             System.out.println("2");
             userDoc.append(Consts.PASS, userFind.getString(Consts.PASS));
             copaDB.getCollection(USERS).replaceOne( toFind, userDoc);
@@ -483,16 +474,6 @@ class RocksDBWrapper {
             response.status(200);
             response.body("Ok");
         }
-        System.out.println("//////////////////////////////////////////////////////////////////////////////////////////////////////");
-        FindIterable<Document> iterableShow = copaDB.getCollection(USERS).find();
-        iterableShow.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document);
-            }
-        });
-        System.out.println("//////////////////////////////////////////////////////////////////////////////////////////////////////");
-
     }
 
     public void login(String user, String pass, Response response) {

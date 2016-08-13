@@ -2,6 +2,8 @@
 //Constantes
 public class Consts {
 
+    final static String ADMIN = "GUELY";
+
     final static String QUANTITY = "cantidad";
     final static String DUE_DATE = "fechaVto";
     final static String PRICE = "precio";
@@ -9,11 +11,12 @@ public class Consts {
     final static String TRANSACTION_DATE = "fechaTrans";
 
     final static String TRANSACTION_TYPE = "tipoTrans";
-    final static String TRANSACTION_TYPE_OUT = "salida";
-    final static String TRANSACTION_TYPE_IN = "entrada";
+    final static String TRANSACTION_TYPE_OUT = "SALIDA";
+    final static String TRANSACTION_TYPE_IN = "ENTRADA";
     final static String TRANSACTION_TYPE_CHANGE = "cambio";
 
-    final static String DESTINY_IN = "Nazca";
+    //sucursal donde se guarda el stock de la empresa //CENTRAL//
+    final static String DESTINY_IN = "SUCURSAL1";
 
     final static String MATERIALS_ID = "insumo_id";
     final static String YEAR_MONTH_ID = "anoMes_id";

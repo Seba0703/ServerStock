@@ -44,13 +44,13 @@ public class HelloWorld {
         put(MAT_SUB, (request, response) -> {
             JSONObject jsonMat = new JSONObject(request.body());
 
-            String materialID = jsonMat.getString(Consts.MATERIALS_ID);
-            String user = jsonMat.getString(Consts.USER);
-            String destiny = jsonMat.getString(Consts.DESTINY);
+            String materialID = jsonMat.getString(Consts.MATERIALS_ID).toUpperCase();
+            String user = jsonMat.getString(Consts.USER).toUpperCase();
+            String destiny = jsonMat.getString(Consts.DESTINY).toUpperCase();
             int quantity = jsonMat.getInt(Consts.QUANTITY);
 
             DB.updateLessMaterialDBkey(user, destiny, materialID, quantity, response);
-            DB.updateLessForTrimester(materialID,quantity);
+            DB.updateLessForTrimester(materialID, quantity);
 
             return response.body();
         });
@@ -61,12 +61,12 @@ public class HelloWorld {
 
             Material material = new Material();
 
-            material.add(jsonMat.getString(Consts.MATERIALS_ID));
+            material.add(jsonMat.getString(Consts.MATERIALS_ID).toUpperCase());
             material.add("" + jsonMat.getInt(Consts.QUANTITY));
             material.add("" + jsonMat.getInt(Consts.DUE_DATE));
             material.add("" + jsonMat.getDouble(Consts.PRICE));
             material.add("" + jsonMat.getInt(Consts.TRANSACTION_DATE));
-            String user = jsonMat.getString(Consts.USER);
+            String user = jsonMat.getString(Consts.USER).toUpperCase();
 
             DB.updateAddMaterialDBkey(material, response);
             DB.updateTransaction(user, material);
@@ -80,12 +80,12 @@ public class HelloWorld {
 
             JSONObject jsonMat = new JSONObject(request.body());
             Material material = new Material();
-            material.add(jsonMat.getString(Consts.MATERIALS_ID));
+            material.add(jsonMat.getString(Consts.MATERIALS_ID).toUpperCase());
             material.add("" + jsonMat.getInt(Consts.QUANTITY));
             material.add("" + jsonMat.getInt(Consts.DUE_DATE));
             material.add("" + jsonMat.getDouble(Consts.PRICE));
             material.add("" + jsonMat.getInt(Consts.TRANSACTION_DATE));
-            String user = jsonMat.getString(Consts.USER);
+            String user = jsonMat.getString(Consts.USER).toUpperCase();
 
             if (DB.hasMaterial(material.nameKey)) {
                 System.out.println("tiene");
@@ -110,6 +110,7 @@ public class HelloWorld {
             iterable.forEach(new Block<Document>() {
                 @Override
                 public void apply(final Document document) {
+                    System.out.println(document);
                     String materialID = document.getString(Consts.MATERIALS_ID);
                     int stockMin = document.getInteger(Consts.STOCK_MIN);
                     int safetyVar = document.getInteger(Consts.STOCK_SAFE);
@@ -175,7 +176,7 @@ public class HelloWorld {
         put(VARS_CONFIG, (request, response) -> {
 
             JSONObject jsonReq = new JSONObject(request.body());
-            String materialID = jsonReq.getString(Consts.MATERIALS_ID);
+            String materialID = jsonReq.getString(Consts.MATERIALS_ID).toUpperCase();
             int multiplier = jsonReq.getInt(Consts.STOCK_MULTIPLY);
             int safe = jsonReq.getInt(Consts.STOCK_SAFE);
             int stockMin = jsonReq.getInt(Consts.STOCK_MIN);
@@ -190,7 +191,7 @@ public class HelloWorld {
             System.out.println("post vars");
 
             JSONObject jsonReq = new JSONObject(request.body());
-            String materialID = jsonReq.getString(Consts.MATERIALS_ID);
+            String materialID = jsonReq.getString(Consts.MATERIALS_ID).toUpperCase();
             int multiplier = jsonReq.getInt(Consts.STOCK_MULTIPLY);
             int safe = jsonReq.getInt(Consts.STOCK_SAFE);
             int stockMin = jsonReq.getInt(Consts.STOCK_MIN);
@@ -203,13 +204,9 @@ public class HelloWorld {
             return "Ok";
         });
 
-
-
         get(VARS_CONFIG, (request, response) -> {
 
-            StockVars stockVars = new StockVars();
-
-            Document doc = DB.getStockVars(request.headers(Consts.MATERIALS_ID), stockVars);
+            Document doc = DB.getStockVars(request.headers(Consts.MATERIALS_ID).toUpperCase());
 
             return doc.toJson();
         });
@@ -236,15 +233,19 @@ public class HelloWorld {
 
         post(SET_USERS, (request, response) -> {
             System.out.println("entra set");
-
-            DB.setUser(Document.parse(request.body()), response);
+            Document doc = Document.parse(request.body());
+            System.out.println(doc);
+            String name = ((String) doc.remove(Consts.USER)).toUpperCase();
+            doc.append(Consts.USER, name);
+            System.out.println(doc);
+            DB.setUser(doc, response);
 
             return response.body();
         });
 
         get(LOGIN, (request, response) -> {
 
-            String user = request.headers(Consts.USER);
+            String user = request.headers(Consts.USER).toUpperCase();
             String pass = request.headers(Consts.PASS);
 
             DB.login(user, pass, response);
@@ -282,7 +283,7 @@ public class HelloWorld {
         put(EDIT_PROD, (request, response) -> {
 
             JSONObject jsonObject = new JSONObject(request.body());
-            String name = jsonObject.getString(Consts.MATERIALS_ID);
+            String name = jsonObject.getString(Consts.MATERIALS_ID).toUpperCase();
             int dueDate = jsonObject.getInt(Consts.DUE_DATE);
             int buyDate = jsonObject.getInt(Consts.TRANSACTION_DATE);
             double price = jsonObject.getDouble(Consts.PRICE);
@@ -301,7 +302,7 @@ public class HelloWorld {
             JSONObject jsonOld = new JSONObject(request.body());
 
             Material oldMat = new Material();
-            oldMat.add(jsonOld.getString(Consts.MATERIALS_ID));
+            oldMat.add(jsonOld.getString(Consts.MATERIALS_ID).toUpperCase());
             oldMat.add("" + jsonOld.getInt(Consts.QUANTITY));
             oldMat.add("" + jsonOld.getInt(Consts.DUE_DATE));
             oldMat.add("" + jsonOld.getDouble(Consts.PRICE));
@@ -310,7 +311,7 @@ public class HelloWorld {
             JSONObject jsonNew = jsonOld.getJSONObject(Consts.NEW_VALUE);
 
             Material newMat = new Material();
-            newMat.add(jsonNew.getString(Consts.MATERIALS_ID));
+            newMat.add(jsonNew.getString(Consts.MATERIALS_ID).toUpperCase());
             newMat.add("" + jsonNew.getInt(Consts.QUANTITY));
             newMat.add("" + jsonNew.getInt(Consts.DUE_DATE));
             newMat.add("" + jsonNew.getDouble(Consts.PRICE));
@@ -332,7 +333,7 @@ public class HelloWorld {
             JSONObject jsonOld = new JSONObject(request.body());
 
             Material oldMat = new Material();
-            oldMat.add(jsonOld.getString(Consts.MATERIALS_ID));
+            oldMat.add(jsonOld.getString(Consts.MATERIALS_ID).toUpperCase());
             oldMat.add("" + jsonOld.getInt(Consts.QUANTITY));
             oldMat.add("" + jsonOld.getInt(Consts.DUE_DATE));
             oldMat.add("" + jsonOld.getDouble(Consts.PRICE));
@@ -341,7 +342,7 @@ public class HelloWorld {
             JSONObject jsonNew = jsonOld.getJSONObject(Consts.NEW_VALUE);
 
             Material newMat = new Material();
-            newMat.add(jsonNew.getString(Consts.MATERIALS_ID));
+            newMat.add(jsonNew.getString(Consts.MATERIALS_ID).toUpperCase());
             newMat.add("" + jsonNew.getInt(Consts.QUANTITY));
             newMat.add("" + jsonNew.getInt(Consts.DUE_DATE));
             newMat.add("" + jsonNew.getDouble(Consts.PRICE));

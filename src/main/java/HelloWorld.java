@@ -3,9 +3,6 @@ import com.mongodb.client.FindIterable;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import spark.Filter;
-import spark.Request;
-import spark.Response;
 
 import javax.print.Doc;
 
@@ -28,6 +25,7 @@ public class HelloWorld {
     private final static String USERS_ID = "userID";
     private static final String DELETE_PROD = "deleteProd";
     private static final String HAS_PERMISSION = "tienePermiso";
+    private static final String PROD_STATUS = "prod_status";
     private static RocksDBWrapper DB;
 
     public static void main(String[] args) {
@@ -245,10 +243,13 @@ public class HelloWorld {
 
         get(LOGIN, (request, response) -> {
 
+            System.out.println("llega al login");
+
             String user = request.headers(Consts.USER).toUpperCase();
             String pass = request.headers(Consts.PASS);
 
             DB.login(user, pass, response);
+            System.out.println("Response login");
 
             return response.body();
 
@@ -409,5 +410,31 @@ public class HelloWorld {
 
             return jsonResult.toString();
         });
+
+        put(PROD_STATUS, (request, response) -> {
+            Document doc = Document.parse(request.body());
+            String materialID = doc.getString(Consts.MATERIALS_ID);
+            int materialStock = DB.getMaterialQuantity(materialID);
+            Document matStock = DB.getStockVars(materialID);
+
+            int stockMin = matStock.getInteger(Consts.STOCK_MIN);
+            int safetyVar = matStock.getInteger(Consts.STOCK_SAFE);
+
+            int result;
+            if (materialStock >= stockMin + safetyVar) {
+                result = Consts.WHITE;
+            } else if ( materialStock <  stockMin + safetyVar && materialStock >= stockMin) {
+                result = Consts.YELLOW;
+            } else {
+                result = Consts.RED;
+            }
+
+            JSONObject jsonMat = new JSONObject();
+            jsonMat.put(Consts.RESULT, result);
+            jsonMat.put(Consts.QUANTITY, materialStock);
+
+            return jsonMat.toString();
+        });
+
     }
 }

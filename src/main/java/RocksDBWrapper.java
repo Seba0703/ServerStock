@@ -8,13 +8,12 @@ import org.bson.Document;
 import org.json.JSONObject;
 import spark.Response;
 
-import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.eq;
 
 class RocksDBWrapper {
 
@@ -258,7 +257,7 @@ class RocksDBWrapper {
     public void saveMaterialStockMax() {
 
         if (!existDB) {
-            Map<String, StockVars> mapStockVar = TokenizerCSV.tokenizeStockMaxFile();
+          //  Map<String, StockVars> mapStockVar = TokenizerCSV.tokenizeStockMaxFile();
 
             Calendar date = Calendar.getInstance();
             int newYearMonth = Integer.parseInt( date.get(Calendar.YEAR) + Common.getRealMonth(date.get(Calendar.MONTH)));
@@ -268,14 +267,14 @@ class RocksDBWrapper {
                     .append(Consts.LAST_UPDATE,newYearMonth));
 
             //inicializa las variables de stock por producto
-            for (Map.Entry<String, StockVars> entry : mapStockVar.entrySet()) {
+        /*    for (Map.Entry<String, StockVars> entry : mapStockVar.entrySet()) {
                 copaDB.getCollection(MaterialStock_Vars).insertOne(new Document(Consts.STOCK_MAX, entry.getValue().stockMax)
                         .append(Consts.MATERIALS_ID, entry.getKey())
                         .append(Consts.YEAR_MONTH_ID, newYearMonth)
                         .append(Consts.STOCK_MIN, entry.getValue().stockMin)
                         .append(Consts.STOCK_SAFE, entry.getValue().safetyVar)
                         .append(Consts.STOCK_MULTIPLY, entry.getValue().multiplierSafetyVar));
-            }
+            }*/
         }
     }
 
@@ -409,8 +408,12 @@ class RocksDBWrapper {
     }
 
     public Document getStockVars(String materialID) {
+        FindIterable<Document> iterable = copaDB.getCollection(LastUpdate).find();
+        Document first = iterable.first();
+        int lastUpdate = first.getInteger(Consts.LAST_UPDATE);
 
-        return copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)).first();
+        return copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)
+                .append(Consts.YEAR_MONTH_ID, lastUpdate)).first();
 
     }
 

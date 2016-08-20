@@ -74,5 +74,6 @@ public class Consts {
     public final static int STATE_OUT = 0;
     public final static String BUY_DATE = "fechaCompra";
     public final static String FINAL_PRICE = "precioFinal";     //precio + IVA
+    public final static String HAS_FURNITURE = "tieneMueble";
 
 }

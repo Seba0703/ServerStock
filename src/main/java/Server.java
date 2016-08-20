@@ -454,14 +454,14 @@ public class Server {
         put(FURNITURE_HAS, (request, response) -> {
 
             Document doc = DB.hasFurniture(Document.parse(request.body()));
-
+            JSONObject jsonResponse = new JSONObject();
             if (doc != null) {
-                response.body("Ok");
-                response.status(200);
+                jsonResponse.put(Consts.HAS_FURNITURE, true);
             } else {
-                response.body("Not exist");
-                response.status(404);
+                jsonResponse.put(Consts.HAS_FURNITURE, false);
             }
+
+            response.body(jsonResponse.toString());
 
             return response.body();
         });

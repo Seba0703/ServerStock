@@ -1,39 +1,6 @@
 
 public class Common {
 
-    public static int nextTrimestrer(int yearMonth) {
-        String yearMonthS = String.valueOf(yearMonth);
-        int month = Integer.parseInt(yearMonthS.substring(4));
-        month += 3;
-
-        return Integer.parseInt(yearMonthS.substring(0,4) + getRealMonth(month) );
-    }
-
-    public static String getRealMonth(int month) {
-
-        String realMonth;
-
-        if ( month > 12 ) {
-            realMonth = "0" + String.valueOf( month - 12);
-        }else {
-            if (month < 10) {
-                realMonth = "0" + String.valueOf(month);
-            } else {
-                realMonth = String.valueOf(month);
-            }
-        }
-
-        return realMonth;
-    }
-
-    public static String getRealDay(int day) {
-        if (day >= 10) {
-            return String.valueOf(day);
-        }else {
-            return "0" + String.valueOf(day);
-        }
-    }
-
     public static int makeTrimesterPrediction(StockVars prevStockVar, int quantityLess ) {
 
         int quantityLeft = prevStockVar.stockMax - quantityLess;

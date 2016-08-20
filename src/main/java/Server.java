@@ -1,15 +1,16 @@
+import Wrappers.CalendarWrapper;
 import com.mongodb.Block;
 import com.mongodb.client.FindIterable;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.print.Doc;
+import java.util.List;
 
 import static spark.Spark.*;
 
 
-public class HelloWorld {
+public class Server {
 
     //--path vars--
     private final static String MAT_SUB = "mat_sub";
@@ -26,14 +27,23 @@ public class HelloWorld {
     private static final String DELETE_PROD = "deleteProd";
     private static final String HAS_PERMISSION = "tienePermiso";
     private static final String PROD_STATUS = "prod_status";
-    private static RocksDBWrapper DB;
+    private static final String FURNITURE = "muebles";
+    private static final String FURNITURE_HAS = "tieneMueble";
+    private static final String FURNITURE_UPDATE_ADD = "updateMueble";
+    private static final String FURNITURE_NOT_UPDATED_COUNT = "notUpdateMueble";
+    private static final String FURNITURE_NOT_UPDATED_NAMES = "namesNotUpdateMueble";
+    private static MongoDBWrapper DB;
 
     public static void main(String[] args) {
 
-        DB = new RocksDBWrapper();
 
-        DB.saveMaterialStockMax();
-        DB.initializeMaterialQuantityTrim();
+        CalendarWrapper calendarWrapper = new CalendarWrapper();
+        DB = new MongoDBWrapper(calendarWrapper);
+
+        DB.saveProductsFromCSV();
+        DB.saveMaterialStockMaxCSV();
+        DB.saveMasterUser();
+
         DB.savePredictionStockThreeMonths();
 
         //levantar base de datos de muebles
@@ -98,16 +108,14 @@ public class HelloWorld {
         });
 
         // devuelvo el estado de todos los insumos
-        get(MAT_STATUS,(request, response) -> {
+        get(MAT_STATUS, (request, response) -> {
 
             JSONObject jsonO = new JSONObject();
             JSONArray jsonArray = new JSONArray();
 
-            FindIterable<Document> iterable = DB.getMaterialsStockVars();
+            List<Document> iterable = DB.getMaterialsStockVars();
 
-            iterable.forEach(new Block<Document>() {
-                @Override
-                public void apply(final Document document) {
+            for(Document document : iterable) {
                     System.out.println(document);
                     String materialID = document.getString(Consts.MATERIALS_ID);
                     int stockMin = document.getInteger(Consts.STOCK_MIN);
@@ -135,8 +143,8 @@ public class HelloWorld {
                     jsonMat.put(Consts.QUANTITY, materialStock);
 
                     jsonArray.put(jsonMat);
-                }
-            });
+            }
+
 
             jsonO.put(Consts.MATERIALS, jsonArray);
             System.out.println(jsonArray.length());
@@ -435,6 +443,74 @@ public class HelloWorld {
 
             return jsonMat.toString();
         });
+
+        post(FURNITURE, (request, response) -> {
+
+            DB.addNewFurniture(Document.parse(request.body()));
+
+            return "Ok";
+        });
+
+        put(FURNITURE_HAS, (request, response) -> {
+
+            Document doc = DB.hasFurniture(Document.parse(request.body()));
+
+            if (doc != null) {
+                response.body("Ok");
+                response.status(200);
+            } else {
+                response.body("Not exist");
+                response.status(404);
+            }
+
+            return response.body();
+        });
+
+        put(FURNITURE_UPDATE_ADD, ((request, response) -> {
+
+            DB.addUpdateFurniture(Document.parse(request.body()));
+
+            return "Ok";
+        }));
+
+        get(FURNITURE, ((request, response) -> {
+            FindIterable<Document> documents = DB.getAllFurniture();
+
+            JSONArray jsonArray = new JSONArray();
+
+            documents.forEach(new Block<Document>() {
+                @Override
+                public void apply(Document doc) {
+                    JSONObject jsonO = new JSONObject(doc.toJson());
+                    jsonArray.put(jsonO);
+                }
+            });
+
+            JSONObject jsonResult = new JSONObject();
+            jsonResult.put(Consts.RESULT, jsonArray);
+            System.out.println(jsonResult.toString());
+
+            return jsonResult.toString();
+        }));
+
+        get(FURNITURE_NOT_UPDATED_COUNT, ((request, response) -> {
+
+            JSONArray docNotUpdated = DB.getFunitureNotUpdated();
+
+            return docNotUpdated.length();
+
+        }));
+
+        get(FURNITURE_NOT_UPDATED_NAMES, ((request, response) -> {
+
+            JSONArray array = DB.getFunitureNotUpdated();
+
+            JSONObject jsonO = new JSONObject();
+            jsonO.put(Consts.RESULT, array);
+
+            return jsonO.toString();
+
+        }));
 
     }
 }

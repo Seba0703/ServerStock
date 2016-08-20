@@ -3,6 +3,7 @@
 public class Consts {
 
     final static String ADMIN = "GUELY";
+    final static String PASS_ADMIN = "1234";
 
     final static String QUANTITY = "cantidad";
     final static String DUE_DATE = "fechaVto";
@@ -60,9 +61,18 @@ public class Consts {
     public final static String CHECK_PASS = "check";
     public static final String PASS_NEW = "passNew";
 
-
-
     public final static String CHANGEold = "cambio viejo";
     public final static String CHANGEnew = "cambio nuevo";
+
+    //Muebles keys
+    public final static String N_SUC = "sucN";
+    public final static String N_MEMBER = "memberN";
+    public final static String STATE = "estado";
+    public final static int STATE_GOOD = 3;
+    public final static int STATE_REGULAR = 2;
+    public final static int STATE_BAD = 1;
+    public final static int STATE_OUT = 0;
+    public final static String BUY_DATE = "fechaCompra";
+    public final static String FINAL_PRICE = "precioFinal";     //precio + IVA
 
 }

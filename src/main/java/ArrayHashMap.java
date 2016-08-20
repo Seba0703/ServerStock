@@ -40,21 +40,19 @@ public class ArrayHashMap {
         }
     }
 
-    public void saveIntoDB(MongoDatabase db) {
-
-        Calendar date = Calendar.getInstance();
-        String yearMonth = date.get(Calendar.YEAR) + Common.getRealMonth(date.get(Calendar.MONTH));
+    public void saveIntoDB(MongoDatabase db, int yearMonth) {
 
         for (Map.Entry<String,  MaterialInfoList> entry : dataMapper.entrySet()) {
 
             List<Document> docList = toDocumentList(entry.getValue().getList());
 
-            db.getCollection(RocksDBWrapper.MaterialsCollection).insertOne(new Document(Consts.INFO, docList)
+            db.getCollection(MongoDBWrapper.MaterialsCollection).insertOne(new Document(Consts.INFO, docList)
                     .append(Consts.MATERIALS_ID, entry.getKey())
-                    .append(Consts.QUANTITY, entry.getValue().getQuantity()));
+                    .append(Consts.QUANTITY, entry.getValue().getQuantity())
+                    .append(Consts.LAST_UPDATE, yearMonth));
 
             //inicializa las salidas de los productos por AñoMes
-            db.getCollection(RocksDBWrapper.MaterialOutQuantityTrim).insertOne(new Document(Consts.MATERIALS_ID, entry.getKey())
+            db.getCollection(MongoDBWrapper.MaterialOutQuantityTrim).insertOne(new Document(Consts.MATERIALS_ID, entry.getKey())
                     .append(Consts.YEAR_MONTH_ID, yearMonth)
                     .append(Consts.QUANTITY, 0));
 

@@ -130,15 +130,6 @@ class MongoDBWrapper {
             response.status(200);
             response.body("Ok");
         }
-
-        //TODO: sacar
-        FindIterable<Document> iterableShow = copaDB.getCollection(MaterialsCollection).find(eq(Consts.MATERIALS_ID, materialID));
-        iterableShow.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document);
-            }
-        });
     }
 
     void updateAddMaterialDBkey(Material material, Response response) {
@@ -186,15 +177,6 @@ class MongoDBWrapper {
             response.status(200);
             response.body("Ok");
         }
-
-        //TODO: sacar
-        FindIterable<Document> iterableShow = copaDB.getCollection(MaterialsCollection).find(eq(Consts.MATERIALS_ID, material.nameKey));
-        iterableShow.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                System.out.println(document);
-            }
-        });
     }
 
     private void addToDocList(List<Document> docArray, int index, MaterialInfo materialInfo) {

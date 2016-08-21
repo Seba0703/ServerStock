@@ -5,23 +5,33 @@ public class Common {
 
         int quantityLeft = prevStockVar.stockMax - quantityLess;
 
+        int newMax;
+
         if ( haveToMoreIncreaseStock(prevStockVar,quantityLeft) ) {
-            return prevStockVar.stockMax + prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
+            newMax = prevStockVar.stockMax + prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
 
         } else if (haveToIncreaseStock(prevStockVar,quantityLeft) ) {
-            return prevStockVar.stockMax + prevStockVar.safetyVar;
+            newMax = prevStockVar.stockMax + prevStockVar.safetyVar;
 
         } else if ( haveToDoSame(prevStockVar,quantityLeft)) {
-            return prevStockVar.stockMax;
+            newMax = prevStockVar.stockMax;
 
         } else if (haveToDecreaseStock(prevStockVar, quantityLeft)) {
-            return prevStockVar.stockMax - prevStockVar.safetyVar;
+            newMax = prevStockVar.stockMax - prevStockVar.safetyVar;
 
-        } else if (haveToMoreDecreaseStock(prevStockVar,quantityLeft)) {
-            return prevStockVar.stockMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
+        } else {
+            newMax = prevStockVar.stockMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
         }
 
-        return prevStockVar.stockMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
+        boolean upper = newMax - prevStockVar.safetyVar < newMax;
+        boolean middle = newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar < newMax - prevStockVar.safetyVar;
+        boolean lower = prevStockVar.stockMin + prevStockVar.safetyVar < newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
+
+        if (upper && middle && lower) {
+            return newMax;
+        } else {
+            return prevStockVar.stockMax;
+        }
     }
 
     private static boolean haveToMoreIncreaseStock(StockVars prevStockVar, int quantityLeft) {
@@ -37,7 +47,7 @@ public class Common {
     }
 
     private static boolean haveToDecreaseStock(StockVars prevStockVar, int quantityLeft) {
-        return quantityLeft > prevStockVar.stockMax - prevStockVar.safetyVar * ( 1 + prevStockVar.multiplierSafetyVar) && quantityLeft < prevStockVar.stockMax - prevStockVar.safetyVar;
+        return quantityLeft > prevStockVar.stockMax - prevStockVar.safetyVar * prevStockVar.multiplierSafetyVar && quantityLeft < prevStockVar.stockMax - prevStockVar.safetyVar;
     }
 
     private static boolean haveToMoreDecreaseStock(StockVars prevStockVar, int quantityLeft) {

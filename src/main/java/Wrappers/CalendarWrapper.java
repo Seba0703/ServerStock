@@ -4,11 +4,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import java.util.Calendar;
-
-/**
- * Created by Sebastian on 15/08/2016.
- */
 public class CalendarWrapper {
 
     private DateTime date;

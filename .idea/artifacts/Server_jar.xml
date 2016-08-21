@@ -21,6 +21,7 @@
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/eclipse/jetty/jetty-servlet/9.3.6.v20151106/jetty-servlet-9.3.6.v20151106.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.13/slf4j-api-1.7.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/json/json/20160212/json-20160212.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

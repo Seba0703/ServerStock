@@ -40,8 +40,8 @@ public class Server {
         CalendarWrapper calendarWrapper = new CalendarWrapper();
         DB = new MongoDBWrapper(calendarWrapper);
 
-        DB.saveProductsFromCSV();
-        DB.saveMaterialStockMaxCSV();
+        //DB.saveProductsFromCSV();
+        //DB.saveMaterialStockMaxCSV();
         DB.saveMasterUser();
 
         DB.savePredictionStockThreeMonths();

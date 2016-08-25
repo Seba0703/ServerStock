@@ -1,15 +1,12 @@
 import Wrappers.CalendarWrapper;
 import com.mongodb.Block;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -514,7 +511,7 @@ class MongoDBWrapper {
 
     }
 
-    void deleteMaterialData(Material oldMat, Response response) {
+    void deleteMaterialData(Material oldMat, Response response, boolean deletePerm) {
 
         Document matInfo = copaDB.getCollection(MaterialsCollection).find(new Document(Consts.MATERIALS_ID, oldMat.nameKey)).first();
         List<Document> docArray =  (List<Document>) matInfo.get(Consts.INFO);
@@ -543,19 +540,30 @@ class MongoDBWrapper {
 
         docArray.remove(docInfo);
 
+        if(docArray.size() != 0 || !deletePerm) {
+            int totalQuantity = matInfo.getInteger(Consts.QUANTITY) - docInfo.getInteger(Consts.QUANTITY);
 
-        int totalQuantity = matInfo.getInteger(Consts.QUANTITY) - docInfo.getInteger(Consts.QUANTITY);
+            UpdateResult result = copaDB.getCollection(MaterialsCollection).updateOne(new Document(Consts.MATERIALS_ID, oldMat.nameKey),
+                    new Document("$set", new Document(Consts.INFO, docArray)
+                            .append(Consts.QUANTITY, totalQuantity)));
 
-        UpdateResult result = copaDB.getCollection(MaterialsCollection).updateOne(new Document(Consts.MATERIALS_ID, oldMat.nameKey),
-                new Document("$set", new Document(Consts.INFO, docArray)
-                        .append(Consts.QUANTITY, totalQuantity)));
-
-        if ( result.getMatchedCount() == 0  || !result.isModifiedCountAvailable()) {
-            response.status(404);
-            response.body("Bad request");
+            if (result.getMatchedCount() == 0 || !result.isModifiedCountAvailable()) {
+                response.status(404);
+                response.body("Bad request");
+            } else {
+                response.status(200);
+                response.body("Ok");
+            }
         } else {
-            response.status(200);
-            response.body("Ok");
+            DeleteResult result = copaDB.getCollection(MaterialsCollection).deleteOne(eq(Consts.MATERIALS_ID, oldMat.nameKey));
+
+            if (!result.wasAcknowledged()) {
+                response.status(404);
+                response.body("Bad request");
+            } else {
+                response.status(200);
+                response.body("Ok");
+            }
         }
     }
 

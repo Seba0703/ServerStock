@@ -303,7 +303,7 @@ public class Server {
             newMat.add("" + jsonNew.getDouble(Consts.PRICE));
             newMat.add("" + jsonNew.getInt(Consts.TRANSACTION_DATE));
 
-            DB.deleteMaterialData(oldMat, response);
+            DB.deleteMaterialData(oldMat, response, false);
             DB.updateAddMaterialDBkey(newMat, response);
             DB.updateChanges(oldMat, newMat, jsonOld.getString(Consts.USER), jsonNew.getString(Consts.USER));
 
@@ -330,7 +330,7 @@ public class Server {
             newMat.add("" + jsonNew.getDouble(Consts.PRICE));
             newMat.add("" + jsonNew.getInt(Consts.TRANSACTION_DATE));
 
-            DB.deleteMaterialData(oldMat, response);
+            DB.deleteMaterialData(oldMat, response, true);
             DB.addNewMaterial(newMat);
             DB.updateChanges(oldMat, newMat, jsonOld.getString(Consts.USER), jsonNew.getString(Consts.USER));
 

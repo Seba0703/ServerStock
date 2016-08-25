@@ -24,8 +24,8 @@ public class Common {
         }
 
         boolean upper = newMax - prevStockVar.safetyVar < newMax;
-        boolean middle = newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar < newMax - prevStockVar.safetyVar;
-        boolean lower = prevStockVar.stockMin + prevStockVar.safetyVar < newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
+        boolean middle = newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar <= newMax - prevStockVar.safetyVar;
+        boolean lower = prevStockVar.stockMin + prevStockVar.safetyVar <= newMax - prevStockVar.multiplierSafetyVar*prevStockVar.safetyVar;
 
         if (upper && middle && lower) {
             return newMax;
@@ -43,7 +43,7 @@ public class Common {
     }
 
     private static boolean haveToDoSame(StockVars prevStockVar, int quantityLeft) {
-        return quantityLeft > prevStockVar.stockMin + prevStockVar.safetyVar && quantityLeft <= prevStockVar.stockMax - prevStockVar.safetyVar * ( 1 + prevStockVar.multiplierSafetyVar);
+        return quantityLeft > prevStockVar.stockMin + prevStockVar.safetyVar && quantityLeft <= prevStockVar.stockMax - prevStockVar.safetyVar * prevStockVar.multiplierSafetyVar;
     }
 
     private static boolean haveToDecreaseStock(StockVars prevStockVar, int quantityLeft) {

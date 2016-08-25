@@ -308,25 +308,26 @@ public class TestServer {
                 .append(Consts.N_MEMBER, 121)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc2 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 1)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc3 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 2)
                 .append(Consts.STATE, Consts.STATE_BAD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         db.addNewFurniture(doc);
         db.addNewFurniture(doc2);
         db.addNewFurniture(doc3);
 
         JSONArray array = db.getFunitureNotUpdated();
+        db.DELETE();
 
         assertTrue(array.length() == 3);
     }
@@ -341,25 +342,26 @@ public class TestServer {
                 .append(Consts.N_MEMBER, 121)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc2 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 1)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 2016020)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc3 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 2)
                 .append(Consts.STATE, Consts.STATE_BAD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201611)
+                .append(Consts.LAST_UPDATE, 20161103)
                 .append(Consts.FINAL_PRICE, 25);
         db.addNewFurniture(doc);
         db.addNewFurniture(doc2);
         db.addNewFurniture(doc3);
 
         JSONArray array = db.getFunitureNotUpdated();
+        db.DELETE();
 
         assertTrue(array.length() == 2);
     }
@@ -374,25 +376,26 @@ public class TestServer {
                 .append(Consts.N_MEMBER, 121)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc2 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 1)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201611)
+                .append(Consts.LAST_UPDATE, 20161103)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc3 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 2)
                 .append(Consts.STATE, Consts.STATE_OUT)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         db.addNewFurniture(doc);
         db.addNewFurniture(doc2);
         db.addNewFurniture(doc3);
 
         JSONArray array = db.getFunitureNotUpdated();
+        db.DELETE();
 
         assertTrue(array.length() == 1);
     }
@@ -407,19 +410,19 @@ public class TestServer {
                 .append(Consts.N_MEMBER, 121)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc2 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 1)
                 .append(Consts.STATE, Consts.STATE_GOOD)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201611)
+                .append(Consts.LAST_UPDATE, 20161103)
                 .append(Consts.FINAL_PRICE, 25);
         Document doc3 = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 2)
                 .append(Consts.STATE, Consts.STATE_OUT)
                 .append(Consts.BUY_DATE, 20160202)
-                .append(Consts.LAST_UPDATE, 201602)
+                .append(Consts.LAST_UPDATE, 20160203)
                 .append(Consts.FINAL_PRICE, 25);
         db.addNewFurniture(doc);
         db.addNewFurniture(doc2);
@@ -427,11 +430,12 @@ public class TestServer {
         Document doc4Up = new Document(Consts.N_SUC, 1)
                 .append(Consts.N_MEMBER, 121)
                 .append(Consts.STATE, Consts.STATE_REGULAR)
-                .append(Consts.LAST_UPDATE, 201611);
+                .append(Consts.LAST_UPDATE, 20161103);
         db.addUpdateFurniture(doc4Up);
 
 
         JSONArray array = db.getFunitureNotUpdated();
+        db.DELETE();
 
         assertTrue(array.length() == 0);
     }

@@ -31,10 +31,10 @@ public class CalendarWrapper {
     }
 
     public static int beforeTwo(int lastUpdate) {
-        DateTimeFormatter dft = DateTimeFormat.forPattern(yyyyMM);
+        DateTimeFormatter dft = DateTimeFormat.forPattern(yyyyMMdd);
         DateTime lastUpdateDate = dft.parseDateTime(String.valueOf(lastUpdate));
 
-        return Integer.parseInt(lastUpdateDate.minusMonths(2).toString(yyyyMM));
+        return Integer.parseInt(lastUpdateDate.minusMonths(2).toString(yyyyMMdd));
 
     }
 

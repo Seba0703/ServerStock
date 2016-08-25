@@ -84,8 +84,6 @@ public class Server {
 
         post(MAT_ADD, (request, response) -> {
 
-            System.out.println("post prod");
-
             JSONObject jsonMat = new JSONObject(request.body());
             Material material = new Material();
             material.add(jsonMat.getString(Consts.MATERIALS_ID).toUpperCase());
@@ -96,10 +94,8 @@ public class Server {
             String user = jsonMat.getString(Consts.USER).toUpperCase();
 
             if (DB.hasMaterial(material.nameKey)) {
-                System.out.println("tiene");
                 DB.updateAddMaterialDBkey(material, response);
             } else {
-                System.out.println("nuevo");
                 DB.addNewMaterial(material);
             }
             DB.updateTransaction(user, material);
@@ -116,45 +112,41 @@ public class Server {
             List<Document> iterable = DB.getMaterialsStockVars();
 
             for(Document document : iterable) {
-                    System.out.println(document);
-                    String materialID = document.getString(Consts.MATERIALS_ID);
-                    int stockMin = document.getInteger(Consts.STOCK_MIN);
-                    int safetyVar = document.getInteger(Consts.STOCK_SAFE);
-                    int stockMax = document.getInteger(Consts.STOCK_MAX);
+                String materialID = document.getString(Consts.MATERIALS_ID);
+                int stockMin = document.getInteger(Consts.STOCK_MIN);
+                int safetyVar = document.getInteger(Consts.STOCK_SAFE);
+                int stockMax = document.getInteger(Consts.STOCK_MAX);
 
-                    int materialStock = DB.getMaterialQuantity(materialID);
+                int materialStock = DB.getMaterialQuantity(materialID);
 
-                    int stockBuy = stockMax - materialStock;
+                int stockBuy = stockMax - materialStock;
 
-                    int result;
-                    if (materialStock >= stockMin + safetyVar) {
-                        result = Consts.WHITE;
-                    } else if ( materialStock <  stockMin + safetyVar && materialStock >= stockMin) {
-                        result = Consts.YELLOW;
-                    } else {
-                        result = Consts.RED;
-                    }
+                int result;
+                if (materialStock >= stockMin + safetyVar) {
+                    result = Consts.WHITE;
+                } else if ( materialStock <  stockMin + safetyVar && materialStock >= stockMin) {
+                    result = Consts.YELLOW;
+                } else {
+                    result = Consts.RED;
+                }
 
-                    JSONObject jsonMat = new JSONObject();
-                    jsonMat.put(Consts.RESULT, result);
-                    jsonMat.put(Consts.MATERIALS_ID, materialID);
-                    jsonMat.put(Consts.TO_BUY, stockBuy);
-                    jsonMat.put(Consts.STOCK_MAX, stockMax);
-                    jsonMat.put(Consts.QUANTITY, materialStock);
+                JSONObject jsonMat = new JSONObject();
+                jsonMat.put(Consts.RESULT, result);
+                jsonMat.put(Consts.MATERIALS_ID, materialID);
+                jsonMat.put(Consts.TO_BUY, stockBuy);
+                jsonMat.put(Consts.STOCK_MAX, stockMax);
+                jsonMat.put(Consts.QUANTITY, materialStock);
 
-                    jsonArray.put(jsonMat);
+                jsonArray.put(jsonMat);
             }
 
 
             jsonO.put(Consts.MATERIALS, jsonArray);
-            System.out.println(jsonArray.length());
 
             return jsonO.toString();
         });
 
         put(MAT_TRANSACTIONS, (request, response) -> {
-
-            System.out.println(request.body());
 
             Document docRequest = Document.parse(request.body());
 
@@ -194,18 +186,14 @@ public class Server {
 
         post(VARS_CONFIG, (request, response) -> {
 
-            System.out.println("post vars");
-
             JSONObject jsonReq = new JSONObject(request.body());
             String materialID = jsonReq.getString(Consts.MATERIALS_ID).toUpperCase();
             int multiplier = jsonReq.getInt(Consts.STOCK_MULTIPLY);
             int safe = jsonReq.getInt(Consts.STOCK_SAFE);
             int stockMin = jsonReq.getInt(Consts.STOCK_MIN);
             int stockMax = jsonReq.getInt(Consts.STOCK_MAX);
-            System.out.println("paso json");
 
             DB.addProductoStockVars(materialID, stockMax, stockMin, safe, multiplier);
-            System.out.println("termino");
 
             return "Ok";
         });
@@ -238,12 +226,9 @@ public class Server {
         });
 
         post(SET_USERS, (request, response) -> {
-            System.out.println("entra set");
             Document doc = Document.parse(request.body());
-            System.out.println(doc);
             String name = ((String) doc.remove(Consts.USER)).toUpperCase();
             doc.append(Consts.USER, name);
-            System.out.println(doc);
             DB.setUser(doc, response);
 
             return response.body();
@@ -251,13 +236,10 @@ public class Server {
 
         get(LOGIN, (request, response) -> {
 
-            System.out.println("llega al login");
-
             String user = request.headers(Consts.USER).toUpperCase();
             String pass = request.headers(Consts.PASS);
 
             DB.login(user, pass, response);
-            System.out.println("Response login");
 
             return response.body();
 
@@ -284,7 +266,6 @@ public class Server {
         });
 
         put(HAS_PERMISSION, ((request, response) -> {
-            System.out.println(request.body());
             DB.hasPermission(Document.parse(request.body()), response);
             return response.body();
         }));
@@ -299,14 +280,10 @@ public class Server {
 
             DB.getMaterialData(name, price, dueDate, buyDate, response);
 
-            System.out.println(response.body());
-
             return response.body();
         });
 
         put(DELETE_PROD, (request, response) -> {
-
-            System.out.println("entra PUT");
 
             JSONObject jsonOld = new JSONObject(request.body());
 
@@ -330,14 +307,10 @@ public class Server {
             DB.updateAddMaterialDBkey(newMat, response);
             DB.updateChanges(oldMat, newMat, jsonOld.getString(Consts.USER), jsonNew.getString(Consts.USER));
 
-            System.out.println(response.body());
-
             return response.body();
         });
 
         post(DELETE_PROD, (request, response) -> {
-
-            System.out.println("entra POST");
 
             JSONObject jsonOld = new JSONObject(request.body());
 
@@ -361,14 +334,10 @@ public class Server {
             DB.addNewMaterial(newMat);
             DB.updateChanges(oldMat, newMat, jsonOld.getString(Consts.USER), jsonNew.getString(Consts.USER));
 
-            System.out.println(response.body());
-
             return response.body();
         });
 
         put(MAT_TRANSACTIONS_CHANGE, (request, response) -> {
-
-            System.out.println("entra CHANGE");
 
             Document document = Document.parse(request.body());
 
@@ -398,8 +367,6 @@ public class Server {
                 document.remove(Consts.TRANSACTION_TYPE);
             }
 
-            System.out.println(document);
-
             FindIterable<Document> result = DB.getChangeRecords(document);
 
             JSONArray jsonArray = new JSONArray();
@@ -414,7 +381,6 @@ public class Server {
 
             JSONObject jsonResult = new JSONObject();
             jsonResult.put(Consts.RESULT, jsonArray);
-            System.out.println(jsonResult.toString());
 
             return jsonResult.toString();
         });
@@ -474,21 +440,10 @@ public class Server {
         }));
 
         get(FURNITURE, ((request, response) -> {
-            FindIterable<Document> documents = DB.getAllFurniture();
-
-            JSONArray jsonArray = new JSONArray();
-
-            documents.forEach(new Block<Document>() {
-                @Override
-                public void apply(Document doc) {
-                    JSONObject jsonO = new JSONObject(doc.toJson());
-                    jsonArray.put(jsonO);
-                }
-            });
+            JSONArray jsonArray = DB.getAllFurniture();
 
             JSONObject jsonResult = new JSONObject();
             jsonResult.put(Consts.RESULT, jsonArray);
-            System.out.println(jsonResult.toString());
 
             return jsonResult.toString();
         }));

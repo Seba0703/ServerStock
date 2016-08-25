@@ -411,15 +411,12 @@ class MongoDBWrapper {
 
         Document toFind = new Document(Consts.USER, userName);
         Document userFind = copaDB.getCollection(USERS).find(toFind).first();
-        System.out.println("User: " + userFind);
 
         boolean checkPass = (Boolean) userDoc.remove(Consts.CHECK_PASS);
 
         if( userFind != null && checkPass) {
             if (userDoc.getString(Consts.PASS).equals(userFind.getString(Consts.PASS))) {
-                System.out.println("pass update");
                 String pasNew = (String)userDoc.remove(Consts.PASS_NEW);
-                System.out.println("passNew: " + pasNew );
                 userDoc.replace(Consts.PASS, pasNew);
                 if (userName.equals(Consts.ADMIN)) {
                     copaDB.getCollection(USERS).updateOne(toFind, new Document("$set", new Document(Consts.PASS, pasNew)));
@@ -428,20 +425,16 @@ class MongoDBWrapper {
                 }
                 response.status(200);
                 response.body("Ok");
-                System.out.println("1");
             } else {
-                System.out.println("error");
                 response.body("Error password");
                 response.status(404);
             }
         } else if (userFind != null && !userName.equals(Consts.ADMIN) ) {
-            System.out.println("2");
             userDoc.append(Consts.PASS, userFind.getString(Consts.PASS));
             copaDB.getCollection(USERS).replaceOne( toFind, userDoc);
             response.status(200);
             response.body("Ok");
         } else if (!userName.equals(Consts.ADMIN)) {
-            System.out.println("3");
             copaDB.getCollection(USERS).insertOne(userDoc);
             response.status(200);
             response.body("Ok");
@@ -463,8 +456,6 @@ class MongoDBWrapper {
             response.status(404);
             response.body("Usuario no existe o contraseña erronea.");
         }
-
-
     }
 
     void addProductoStockVars(String materialID, int stockMax, int stockMin, int safe, int multiplier) {
@@ -542,7 +533,6 @@ class MongoDBWrapper {
             int buyDateProd = info.getInteger(Consts.TRANSACTION_DATE);
             if (dueDateProd == oldMatInfo.dueDate && priceProd == oldMatInfo.price && buyDateProd == oldMatInfo.buyDate && cant == oldMatInfo.quantity) {
                 docInfo = info;
-                System.out.println("while " + docInfo);
                 end = true;
             } else if (oldMatInfo.dueDate < dueDateProd) {
                 end = true;
@@ -551,16 +541,10 @@ class MongoDBWrapper {
             i++;
         }
 
-        System.out.println("remove " + docInfo);
         docArray.remove(docInfo);
 
-        System.out.println("LIST " + docArray);
 
         int totalQuantity = matInfo.getInteger(Consts.QUANTITY) - docInfo.getInteger(Consts.QUANTITY);
-
-        System.out.println("cantidad prev " + matInfo.getInteger(Consts.QUANTITY));
-        System.out.println("cantidad saco " +docInfo.getInteger(Consts.QUANTITY));
-
 
         UpdateResult result = copaDB.getCollection(MaterialsCollection).updateOne(new Document(Consts.MATERIALS_ID, oldMat.nameKey),
                 new Document("$set", new Document(Consts.INFO, docArray)
@@ -569,11 +553,9 @@ class MongoDBWrapper {
         if ( result.getMatchedCount() == 0  || !result.isModifiedCountAvailable()) {
             response.status(404);
             response.body("Bad request");
-            System.out.println("BAD");
         } else {
             response.status(200);
             response.body("Ok");
-            System.out.println("OK");
         }
     }
 
@@ -655,13 +637,31 @@ class MongoDBWrapper {
         copaDB.getCollection(FurnituresDBname).insertOne(parse);
     }
 
-    public FindIterable<Document> getAllFurniture() {
-        return copaDB.getCollection(FurnituresDBname).find();
+    public JSONArray getAllFurniture() {
+        FindIterable<Document> furnitures = copaDB.getCollection(FurnituresDBname).find();
+        JSONArray jsonArray = new JSONArray();
+
+        furnitures.forEach(new Block<Document>() {
+            @Override
+            public void apply(Document doc) {
+                Document info = getMemberInfo(doc.getInteger(Consts.N_MEMBER));
+                doc.put(Consts.FINAL_PRICE, info.getDouble(Consts.FINAL_PRICE));
+                doc.put(Consts.BUY_DATE, info.getInteger(Consts.BUY_DATE));
+                JSONObject jsonObject = new JSONObject(doc.toJson());
+                jsonArray.put(jsonObject);
+            }
+        });
+
+        return jsonArray;
+    }
+
+    public Document getMemberInfo(int member) {
+        return copaDB.getCollection(NUM_MUEBLES).find(eq(Consts.N_MEMBER, member)).first();
     }
 
     public JSONArray getFunitureNotUpdated() {
 
-        int floorDate = CalendarWrapper.beforeTwo(yearMonth);
+        int floorDate = CalendarWrapper.beforeTwo(yearMonthDay);
 
         FindIterable<Document> members = copaDB.getCollection(NUM_MUEBLES).find();
         JSONArray furnituresNotUpdated = new JSONArray();

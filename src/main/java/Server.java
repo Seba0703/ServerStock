@@ -46,9 +46,6 @@ public class Server {
 
         DB.savePredictionStockThreeMonths();
 
-        //levantar base de datos de muebles
-        //levantar base de datos de usuarios
-
         put(MAT_SUB, (request, response) -> {
             JSONObject jsonMat = new JSONObject(request.body());
 
@@ -412,7 +409,16 @@ public class Server {
 
         post(FURNITURE, (request, response) -> {
 
-            DB.addNewFurniture(Document.parse(request.body()));
+            JSONObject jsonO = new JSONObject(request.body());
+
+            Document doc = new Document(Consts.N_SUC, jsonO.getInt(Consts.N_SUC))
+                    .append(Consts.N_MEMBER, jsonO.getInt(Consts.N_MEMBER))
+                    .append(Consts.STATE,  jsonO.getInt(Consts.STATE))
+                    .append(Consts.BUY_DATE,  jsonO.getInt(Consts.BUY_DATE))
+                    .append(Consts.LAST_UPDATE,  jsonO.getInt(Consts.LAST_UPDATE))
+                    .append(Consts.FINAL_PRICE, jsonO.getDouble(Consts.FINAL_PRICE));
+
+            DB.addNewFurniture(doc);
 
             return "Ok";
         });

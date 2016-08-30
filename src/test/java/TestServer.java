@@ -433,7 +433,6 @@ public class TestServer {
                 .append(Consts.LAST_UPDATE, 20161103);
         db.addUpdateFurniture(doc4Up);
 
-
         JSONArray array = db.getFunitureNotUpdated();
         db.DELETE();
 

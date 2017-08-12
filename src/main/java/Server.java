@@ -5,7 +5,14 @@ import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.*;
 
@@ -34,6 +41,29 @@ public class Server {
     private static final String FURNITURE_NOT_UPDATED_NAMES = "namesNotUpdateMueble";
     private static MongoDBWrapper DB;
 
+    public static void setScheduledTask() {
+        LocalDateTime localNow = LocalDateTime.now();
+        ZoneId currentZone = ZoneId.of("America/Buenos_Aires");
+        ZonedDateTime zonedNow = ZonedDateTime.of(localNow, currentZone);
+        ZonedDateTime zonedNext5 ;
+        zonedNext5 = zonedNow.withHour(21).withMinute(0).withSecond(0);
+        if(zonedNow.compareTo(zonedNext5) > 0)
+            zonedNext5 = zonedNext5.plusDays(1);
+
+        Duration duration = Duration.between(zonedNow, zonedNext5);
+        long initalDelay = duration.getSeconds();
+
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(new Runnable() {
+                                          @Override
+                                          public void run() {
+                                              DB.setDate(new CalendarWrapper());
+                                              DB.savePredictionStockThreeMonths();
+                                          }
+                                      }, initalDelay,
+                24*60*60, TimeUnit.SECONDS);
+    }
+
     public static void main(String[] args) {
 
 
@@ -43,8 +73,7 @@ public class Server {
         //DB.saveProductsFromCSV();
         //DB.saveMaterialStockMaxCSV();
         DB.saveMasterUser();
-
-        DB.savePredictionStockThreeMonths();
+        setScheduledTask();
 
         put(MAT_SUB, (request, response) -> {
             JSONObject jsonMat = new JSONObject(request.body());

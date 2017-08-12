@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Response;
 
+import javax.print.attribute.standard.MediaPrintableArea;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,11 @@ class MongoDBWrapper {
         });
 
         copaDB = mongoClient.getDatabase(COPA_DB);
+    }
+
+    void setDate(CalendarWrapper calendar) {
+        yearMonthDay = calendar.getYYYYMMDD();
+        yearMonth =  calendar.getYYYYMM();
     }
 
     void saveProductsFromCSV() {
@@ -318,7 +324,8 @@ class MongoDBWrapper {
 
     //salidas
     private void updateTransaction(String user, String destiny, String materialID, int quantity, int dueDate, double price) {
-        recordTransaction(user, materialID, yearMonthDay, destiny, Consts.TRANSACTION_TYPE_OUT, price, quantity, dueDate);
+
+        recordTransaction(user, materialID, new CalendarWrapper().getYYYYMMDD(), destiny, Consts.TRANSACTION_TYPE_OUT, price, quantity, dueDate);
     }
 
     FindIterable<Document> getRecords(Document document) {
@@ -395,10 +402,10 @@ class MongoDBWrapper {
         copaDB.getCollection(MaterialsCollection).insertOne(new Document(Consts.MATERIALS_ID, material.nameKey)
                 .append(Consts.INFO, listDoc)
                 .append(Consts.QUANTITY, material.materialInfo.quantity)
-                .append(Consts.LAST_UPDATE, yearMonth));
+                .append(Consts.LAST_UPDATE, new CalendarWrapper().getYYYYMM()));
 
         copaDB.getCollection(MaterialOutQuantityTrim).insertOne(new Document(Consts.MATERIALS_ID,  material.nameKey)
-                .append(Consts.YEAR_MONTH_ID, yearMonth)
+                .append(Consts.YEAR_MONTH_ID, new CalendarWrapper().getYYYYMM())
                 .append(Consts.QUANTITY, 0));
     }
 
@@ -459,7 +466,7 @@ class MongoDBWrapper {
 
         copaDB.getCollection(MaterialStock_Vars).insertOne(new Document(Consts.STOCK_MAX, stockMax)
                 .append(Consts.MATERIALS_ID, materialID)
-                .append(Consts.YEAR_MONTH_ID, yearMonth)
+                .append(Consts.YEAR_MONTH_ID, new CalendarWrapper().getYYYYMM())
                 .append(Consts.STOCK_MIN, stockMin)
                 .append(Consts.STOCK_SAFE, safe)
                 .append(Consts.STOCK_MULTIPLY, multiplier));
@@ -669,7 +676,7 @@ class MongoDBWrapper {
 
     public JSONArray getFunitureNotUpdated() {
 
-        int floorDate = CalendarWrapper.beforeTwo(yearMonthDay);
+        int floorDate = CalendarWrapper.beforeTwo(new CalendarWrapper().getYYYYMMDD());
 
         FindIterable<Document> members = copaDB.getCollection(NUM_MUEBLES).find();
         JSONArray furnituresNotUpdated = new JSONArray();

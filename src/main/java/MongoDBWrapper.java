@@ -216,6 +216,15 @@ class MongoDBWrapper {
                             new Document(Consts.YEAR_MONTH_ID, lastUpdate)
                                     .append(Consts.MATERIALS_ID, materialID)).first();
 
+                    if(quantityOutDoc == null) {
+
+                        quantityOutDoc = new Document(Consts.MATERIALS_ID, materialID)
+                                .append(Consts.YEAR_MONTH_ID, yearMonth)
+                                .append(Consts.QUANTITY, 0);
+
+                        copaDB.getCollection(MaterialOutQuantityTrim).insertOne(quantityOutDoc);
+                    }
+
                     int quantityOut = quantityOutDoc.getInteger(Consts.QUANTITY);
 
                     Document materialStockVar = copaDB.getCollection(MaterialStock_Vars).find(new Document(Consts.MATERIALS_ID, materialID)
@@ -235,6 +244,30 @@ class MongoDBWrapper {
                             .append(Consts.STOCK_MIN, stockVars.stockMin)
                             .append(Consts.STOCK_SAFE, stockVars.safetyVar)
                             .append(Consts.STOCK_MULTIPLY, stockVars.multiplierSafetyVar));
+                } else {
+                    Document matStockVar = copaDB.getCollection(MaterialStock_Vars).find(
+                            new Document(Consts.MATERIALS_ID, materialID)
+                                    .append(Consts.YEAR_MONTH_ID, yearMonth)).first();
+
+                    if (matStockVar == null && yearMonth == lastUpdate) {
+                        Document materialStockVar = copaDB.getCollection(MaterialStock_Vars)
+                                .find(new Document(Consts.MATERIALS_ID, materialID))
+                                .sort(new Document(Consts.YEAR_MONTH_ID, -1)).first();
+
+                        StockVars stockVars = new StockVars();
+                        stockVars.safetyVar = materialStockVar.getInteger(Consts.STOCK_SAFE);
+                        stockVars.multiplierSafetyVar = materialStockVar.getInteger(Consts.STOCK_MULTIPLY);
+                        stockVars.stockMax = materialStockVar.getInteger(Consts.STOCK_MAX);
+                        stockVars.stockMin = materialStockVar.getInteger(Consts.STOCK_MIN);
+
+                        copaDB.getCollection(MaterialStock_Vars).insertOne(new Document(Consts.STOCK_MAX, stockVars.stockMax)
+                                .append(Consts.MATERIALS_ID, materialID)
+                                .append(Consts.YEAR_MONTH_ID, yearMonth)
+                                .append(Consts.STOCK_MIN, stockVars.stockMin)
+                                .append(Consts.STOCK_SAFE, stockVars.safetyVar)
+                                .append(Consts.STOCK_MULTIPLY, stockVars.multiplierSafetyVar));
+
+                    }
                 }
             }
         });
